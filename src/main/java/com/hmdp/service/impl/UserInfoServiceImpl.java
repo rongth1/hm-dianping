@@ -28,24 +28,6 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper, UserInfo> implements IUserInfoService {
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
-
-    @Override
-    public Result sendCode(String phone, HttpSession session) {
-        // 1.验证手机号, 如果不符合、返回错误信息, 符合，生成验证码
-        boolean phoneInvalid = RegexUtils.isPhoneInvalid(phone);
-        if (phoneInvalid) {
-            return Result.fail("手机号码格式错误！");
-        }
-        // 2. 生成验证码，并将验证码保存到redis中
-        String code = RandomUtil.randomNumbers(6);
-        stringRedisTemplate.opsForValue().set(RedisConstants.LOGIN_CODE_KEY + phone, code, RedisConstants.LOGIN_CODE_TTL, TimeUnit.SECONDS);
-
-        // 3. 发送验证码
-        log.debug("发送短信验证码成功，验证码为：{}", code);
-        return Result.ok();
-    }
 
 
 

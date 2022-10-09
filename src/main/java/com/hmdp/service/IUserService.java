@@ -18,11 +18,21 @@ import javax.servlet.http.HttpSession;
 public interface IUserService extends IService<User> {
 
     /**
+     *  发送验证码
+     * @param phone
+     * @param session
+     * @return
+     */
+    public Result sendCode(String phone, HttpSession session);
+
+
+    /**
      *  登录功能
      * @param loginForm
      * @param session
      * @return
      */
     Result login(LoginFormDTO loginForm, HttpSession session);
+
 
 }
