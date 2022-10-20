@@ -37,7 +37,8 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         // 2. 判断缓存是否命中
         if (null != shopTypeJsonList && shopTypeJsonList.size() > 0) {
             // 2.1 命中直接返回
-            return Result.ok(shopTypeJsonList);
+            List<ShopType> list = shopTypeJsonList.stream().map(d -> JSONUtil.toBean(d, ShopType.class)).collect(Collectors.toList());
+            return Result.ok(list);
         }
         // 3.未命中，查询数据库
         List<ShopType> shopTypeList = query().orderByAsc("sort").list();
@@ -49,6 +50,6 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         // 5. 数据库可以查到，将数据缓存到redis，并返回结果数据
         List<String> shopTypeJsonListDB = shopTypeList.stream().map(JSONUtil::toJsonStr).collect(Collectors.toList());
         stringRedisTemplate.opsForList().rightPushAll(RedisConstants.CACHE_SHOP_TYPE_KEY, shopTypeJsonListDB);
-        return Result.ok(shopTypeJsonListDB);
+        return Result.ok(shopTypeList);
     }
 }

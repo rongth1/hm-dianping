@@ -56,9 +56,10 @@ public class ShopController {
      */
     @PutMapping
     public Result updateShop(@RequestBody Shop shop) {
-        // 写入数据库
-        shopService.updateById(shop);
-        return Result.ok();
+        if (null == shop || shop.getId() <= 0) {
+            return Result.fail("店铺不存在！");
+        }
+        return shopService.updateShopById(shop);
     }
 
     /**
