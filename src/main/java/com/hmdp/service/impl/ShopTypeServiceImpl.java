@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +51,8 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         // 5. 数据库可以查到，将数据缓存到redis，并返回结果数据
         List<String> shopTypeJsonListDB = shopTypeList.stream().map(JSONUtil::toJsonStr).collect(Collectors.toList());
         stringRedisTemplate.opsForList().rightPushAll(RedisConstants.CACHE_SHOP_TYPE_KEY, shopTypeJsonListDB);
+        // 为缓存添加过期时间
+        stringRedisTemplate.expire(RedisConstants.CACHE_SHOP_TYPE_KEY, RedisConstants.CACHE_SHOP_TYPE_TTL, TimeUnit.MINUTES);
         return Result.ok(shopTypeList);
     }
 }
