@@ -26,5 +26,5 @@ public interface IShopService extends IService<Shop> {
      * @param shop 商铺数据
      * @return 无
      */
-    Result updateShopById(Shop shop);
+    Result updateShopById(long shopId, Shop shop);
 }

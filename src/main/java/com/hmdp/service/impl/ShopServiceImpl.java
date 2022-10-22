@@ -1,19 +1,14 @@
 package com.hmdp.service.impl;
 
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.cacheUtils.CleanCache;
+import com.hmdp.cacheUtils.QueryCache;
 import com.hmdp.dto.Result;
 import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
 import com.hmdp.service.IShopService;
 import com.hmdp.utils.RedisConstants;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.annotation.Resource;
-import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -26,31 +21,18 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
-
+    @QueryCache(prefix = RedisConstants.CACHE_SHOP_KEY, field = " #id ")
     @Override
     public Result queryById(Long id) {
-        String redisKey = RedisConstants.CACHE_SHOP_KEY + id;
-        // 1. 根据id从redis查询商铺缓存。（缓存中的key需要设计的合理，返回的是shop的JSON字符串）
-        String shopJson = stringRedisTemplate.opsForValue().get(redisKey);
-        // 2. 判断缓存是否命中
-        if (StrUtil.isNotBlank(shopJson)) {
-            // 2.1 命中返回商铺信息
-            Shop shop = JSONUtil.toBean(shopJson, Shop.class);
-            return Result.ok(shop);
-        }
-        // 3.未命中时，查询数据库
         Shop shopDB = getById(id);
-        // 4. 判断数据库中商铺是否存在
+        // 判断数据库中商铺是否存在
         if (null == shopDB) {
-            // 4.1 不存在，返回404
+            // 不存在，返回404
             return Result.fail("商铺信息不存在！");
         }
-        // 4.2 存在，商铺数据写入redis缓存，返回商铺信息
-        stringRedisTemplate.opsForValue().set(redisKey, JSONUtil.toJsonStr(shopDB), RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         return Result.ok(shopDB);
     }
+
 
     /**
      * 更新商铺信息
@@ -58,16 +40,13 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
      * @return 无
      */
     @Override
-    @Transactional
-    public Result updateShopById(Shop shop) {
-        Long shopId = shop.getId();
+    @CleanCache(prefix = RedisConstants.CACHE_SHOP_KEY, field = "#shopId")
+    public Result updateShopById(long shopId, Shop shop) {
         // 修改数据库
         boolean dbFlag = updateById(shop);
         if (! dbFlag) {
             return Result.fail("店铺信息更新失败，db");
         }
-        // 删除缓存
-        stringRedisTemplate.delete(RedisConstants.CACHE_SHOP_KEY + shopId);
         return Result.ok(shopId);
     }
 }

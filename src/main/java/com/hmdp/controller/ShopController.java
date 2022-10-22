@@ -33,7 +33,7 @@ public class ShopController {
      */
     @GetMapping("/{id}")
     public Result queryShopById(@PathVariable("id") Long id) {
-        return Result.ok(shopService.queryById(id));
+        return shopService.queryById(id);
     }
 
     /**
@@ -59,7 +59,7 @@ public class ShopController {
         if (null == shop || shop.getId() <= 0) {
             return Result.fail("店铺不存在！");
         }
-        return shopService.updateShopById(shop);
+        return shopService.updateShopById(shop.getId(), shop);
     }
 
     /**
